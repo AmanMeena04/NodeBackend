@@ -8,7 +8,7 @@ function genratePDF(data) {
 
 
     data.forEach((row) => {
-        // Assuming your table has 'name', 'email', and 'age' columns
+        // table has 'name', 'email', and 'age' columns
         doc.text(`UserId: ${row.id}`);
         doc.text(`Username: ${row.username}`);
         doc.text(`Email: ${row.email}`);

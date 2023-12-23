@@ -8,33 +8,6 @@ const auth = require('../controller/auth.js');
 const express = require('express');
 const app = express();
 const path = require('path');
-const fs = require('fs');
-const url = require("url");
-
-// Upload File With Multer:
-// app.use(express.static('uploads'));
-
-// const storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//       cb(null, 'uploads/images');
-//     },
-//     filename: function (req, file, cb) {
-//       // Generate a unique filename
-//       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-//       cb(null, uniqueSuffix + '-' + file.originalname);
-//     }
-// });
-
-// const upload = multer({ storage:storage,
-//     fileFilter: (req, file, cb) => {
-        
-//         if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "application/pdf") {
-//         cb(null, true);
-//         } else {
-//         cb(null, false);
-//         return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
-//         }
-// }});
 
 const reactBuildDir = "reactjs/build";
 const uploadDir = "uploads";
@@ -63,21 +36,6 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 
 app.use(upload.single('file'));
-
-// File Upload:
-// router.post('/file', upload.single('file'), async(req, res)=> {
-    
-//     if (!req.file) {
-//         return res.status(400).json({ message: 'No file uploaded.' });
-//     }
-//     console.log(req,'AAAAAAAAAAA', req.file);
-//     const data = {
-//         image:'file:///home/aman/Desktop/NodeBackend/server/'+req.file.path,
-//     }
-
-//     const user_data = await user.upload(data, req.user ? req.user:user.id);
-//     res.send(user_data);
-// });
 
 // User Login:
 router.post('/login', async(req, res) => {
@@ -140,7 +98,6 @@ router.post('/register', upload.single('file'), async(req, res) => {
     else if(req.file.mimetype=='image/jpg' || req.file.mimetype== 'image/jpeg' || req.file.mimetype == "image/png"){
         data.image =
         uploadDir + "/" + req.file.filename.replace(/\\/g, path.sep);
-        // data.image = path.join(__dirname, '../uploads/images', req.file);
     };
 
     try {
