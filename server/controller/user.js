@@ -5,40 +5,82 @@ const pdf = require('../pdf/genpdf.js');
 const excel = require('../excel/genexcel.js');
 const multer = require('multer');
 const auth = require('../controller/auth.js');
+const express = require('express');
+const app = express();
+const path = require('path');
+const fs = require('fs');
+const url = require("url");
 
 // Upload File With Multer:
+// app.use(express.static('uploads'));
+
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//       cb(null, 'uploads/images');
+//     },
+//     filename: function (req, file, cb) {
+//       // Generate a unique filename
+//       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+//       cb(null, uniqueSuffix + '-' + file.originalname);
+//     }
+// });
+
+// const upload = multer({ storage:storage,
+//     fileFilter: (req, file, cb) => {
+        
+//         if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "application/pdf") {
+//         cb(null, true);
+//         } else {
+//         cb(null, false);
+//         return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+//         }
+// }});
+
+const reactBuildDir = "reactjs/build";
+const uploadDir = "uploads";
+
+app.use("/" + uploadDir, express.static(uploadDir));
+app.use(express.static(path.join(__dirname, "../" + reactBuildDir)));
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-      // Generate a unique filename
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + '-' + file.originalname);
-    }
+  destination: function (req, file, cb) {
+    cb(null, uploadDir + "/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${file.fieldname}-${Date.now()}.${file.mimetype.split("/")[1]}`);
+  },
 });
 
-const upload = multer({ storage });
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png" || file.mimetype === "application/pdf") {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+const upload = multer({ storage: storage, fileFilter: fileFilter });
+
+
+app.use(upload.single('file'));
 
 // File Upload:
-router.post('/file', auth.authenticateToken, upload.single('file'), async(req, res)=> {
+// router.post('/file', upload.single('file'), async(req, res)=> {
     
-    if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded.' });
-    }
+//     if (!req.file) {
+//         return res.status(400).json({ message: 'No file uploaded.' });
+//     }
+//     console.log(req,'AAAAAAAAAAA', req.file);
+//     const data = {
+//         image:'file:///home/aman/Desktop/NodeBackend/server/'+req.file.path,
+//     }
 
-    const data = {
-        image:req.file.path,
-    }
-
-    const user_data = await user.upload(data, req.user);
-    res.send(user_data);
-});
+//     const user_data = await user.upload(data, req.user ? req.user:user.id);
+//     res.send(user_data);
+// });
 
 // User Login:
 router.post('/login', async(req, res) => {
-
     const { email, password } = req.body;
     const data = {
         email:email,
@@ -60,40 +102,50 @@ router.post('/login', async(req, res) => {
 // Read All Users:
 router.get('/read', async(req,res)=> {
     
-    const data = await user.read();
+    const data = await user.read(); 
     res.send(data);
 });
 
 // Read Single User:
 router.get('/read/:id', async (req, res) => {
-
     const id = req.params.id;
     const data = await user.readOne(id);
 
-    res.send(data);
+    return res.send(data);
 });
 
 // User Register:
-router.post('/register', async(req, res) => {
-
-    const { username, email, password } = req.body;
+router.post('/register', upload.single('file'), async(req, res) => {
+    
+    const { username, email, password} = req.body;
 
     if(!username || !email|| !password) {
-        res.send('Please Fill all Field')
+        return res.send('Please Fill all Field');
     }
-    
-    if(password.length != 8) {
-        res.send('Password Should be 8 or more than 8');
+    if(!req.file){
+        return res.send('Please upload file!');
     }
-
-    const data = {
+    if(password.length < 8) {
+        return res.send('Password Should be 8 or more than 8');
+    }
+    let data = {
         username:username,
         email:email,
         password:password
     }
+
+    if(req.file.mimetype=='application/pdf'){
+        data.pdf= uploadDir + "/" + req.file.filename.replace(/\\/g, path.sep);
+    }
+    else if(req.file.mimetype=='image/jpg' || req.file.mimetype== 'image/jpeg' || req.file.mimetype == "image/png"){
+        data.image =
+        uploadDir + "/" + req.file.filename.replace(/\\/g, path.sep);
+        // data.image = path.join(__dirname, '../uploads/images', req.file);
+    };
+
     try {
         const user_data = await user.register(data);
-        res.send(user_data);
+        return res.send(user_data);
     }
     catch(err) {
         return res.send(err.message);
@@ -105,25 +157,32 @@ router.put('/update/:id', async (req, res) => {
 
     const data = {};
 
+    if(!req.body.email){
+        return res.send("Please fill or Email");
+    };
+
     if(req.body.username){
         data.username = req.body.username
     }
-    if(req.body.username){
+    if(req.body.email){
         data.email = req.body.email
     }
-    if(req.body.username) {
-        data.password = req.body.password
+    if(req.body.password) {
+        data.password = req.body.password || null;
     }
-    
-   const user_data = await user.update(data, req.params.id);
-
-   res.send(user_data);
+    try {
+    const user_data = await user.update(data, req.params.id);
+    return res.send(user_data);
+    }
+    catch(err) {
+        return res.send(err.message);
+    }
 });
 
 // Delete User:
-router.delete('/delete/:id', auth.authenticateToken, async (req, res) => {
+router.delete('/delete/:id', async (req, res) => {
     const delUser = await user.deleteUser(req.params.id);
-    res.send(delUser);
+    return res.send(delUser);
 });
 
 // Logout User:
@@ -134,10 +193,10 @@ router.get('/logout', auth.authenticateToken, (req, res) => {
     jwt.sign(authHeader, "", { expiresIn: 1 } , (logout, err) => {
 
     if (logout) {
-    res.send({msg : 'You have been Logged Out' });
+    return res.send({msg : 'You have been Logged Out' });
     } 
     else {
-    res.send({msg:'Error'});
+    return res.send({msg:'Error'});
     }
     });
 
@@ -149,7 +208,7 @@ router.get('/generatepdf', auth.authenticateToken, async(req, res)=> {
     const genPDF = await user.genratePDF();
     pdf.genratePDF(genPDF);
 
-    res.send(genPDF);
+    return res.send(genPDF);
 });
 
 // Generate Excel of Single User:
@@ -160,7 +219,7 @@ router.get('/genexcel/:id', auth.authenticateToken, async(req, res)=> {
 
     excel.genExcel(genExel);
 
-    res.send(genExel);
+    return res.send(genExel);
 });
 
 module.exports = router;

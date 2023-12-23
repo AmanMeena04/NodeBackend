@@ -38,7 +38,8 @@ console.log('Connected to MySQL');
 function upload(user, info) {
 
     return new Promise((resolve, reject) => {
-    
+      console.log('AAAAAAAAAAA', user);
+
         connection.query(`SELECT * FROM users WHERE id=${info.id}`, (err, results) => {
             if (err) {
               console.error('Error retrieving user into database:', err);
@@ -49,8 +50,8 @@ function upload(user, info) {
             }
             connection.query(`UPDATE users SET ? WHERE id = ${info.id}`,[data],(err,results)=> {
               if(err) console.error('Error update user image:', err);
+              resolve({ message: 'File uploaded successfully.',results:results });
             });
-            resolve({ message: 'File uploaded successfully.',results:results });
           });
     });
 }
@@ -61,21 +62,21 @@ function register(user) {
 
     return new Promise((resolve, reject) => {
         // Check if the username is already taken
-    connection.query('SELECT * FROM users WHERE username = ?', [user.username], (err, results) => {
+    connection.query('SELECT * FROM users WHERE email = ?', [user.email], (err, results) => {
         if (err) {
 
           console.error('Error querying database:', err);
           return reject(500);
         }
         if (results.length > 0) {
-          return reject({ message: 'Username already taken' });
+          return reject({ message: 'Email already registered' });
         }
 
         // Generate a salt and hash the password
         bcrypt.genSalt(10, (err, salt) => {
           bcrypt.hash(user.password, salt, (err, hash) => {
             // Store the user in the database
-            connection.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [user.username, user.email, hash], (err) => {
+            connection.query('INSERT INTO users (username, email, password,image,pdf) VALUES (?, ?, ?, ?, ?)', [user.username, user.email, hash, user.image, user.pdf], (err) => {
               if (err) {
                 console.error('Error inserting user into database:', err);
                 return reject(500);
@@ -184,13 +185,13 @@ function update(data, id) {
                       password:hash,
                       username:data.username
                     }
-                    connection.query(`UPDATE users SET ? WHERE id = ?`,[info, id], (err) => {
+                    connection.query(`UPDATE users SET password = ? WHERE id = ?`,[info.password, id], (err) => {
                       if (err) {
                         console.error('Error updating user into database:', err);
                         reject(500);
                       }
             
-                      resolve({ message: 'User update successfully' });
+                      resolve({ message: 'User password update successfully' });
                     });
                   });
               });
@@ -201,7 +202,7 @@ function update(data, id) {
                 username:data.username,
                 email:data.email
               }
-              connection.query(`UPDATE users SET ? WHERE id = ?`,[info, id], (err) => {
+              connection.query(`UPDATE users SET email = ?,username = ? WHERE id = ?`,[info.email, info.username, id], (err) => {
                 if (err) {
                   console.error('Error updating user into database:', err);
                   reject(500);
@@ -228,7 +229,7 @@ function deleteUser(id) {
         connection.query(`DELETE FROM users WHERE id=${id}`, (err, result)=> {
             if(err) reject(err);
             else 
-                resolve(result);
+                resolve({ message: 'User Delete successfully' });
         })
     })
 }
