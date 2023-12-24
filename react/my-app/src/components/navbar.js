@@ -1,8 +1,5 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-// import Exam from './exam';
-// import { NavLink } from "react-router-dom";
-
 
 function Navbar() {
     return(
@@ -20,9 +17,6 @@ function Navbar() {
                 </li>
                 <li className="nav-item">
                 <Link className="nav-link active" aria-current="page" to='/create'>Create</Link>
-                </li>
-                <li className="nav-item">
-                <Link className="nav-link active" aria-current="page" to='/exam'>Exam</Link>
                 </li>
             </ul>
             </div>
