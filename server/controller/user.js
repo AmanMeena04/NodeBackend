@@ -58,14 +58,14 @@ router.post('/login', async(req, res) => {
 });
 
 // Read All Users:
-router.get('/read', async(req,res)=> {
+router.get('/read', auth.authenticateToken, async(req,res)=> {
     
     const data = await user.read(); 
     res.send(data);
 });
 
 // Read Single User:
-router.get('/read/:id', async (req, res) => {
+router.get('/read/:id', auth.authenticateToken, async (req, res) => {
     const id = req.params.id;
     const data = await user.readOne(id);
 
@@ -73,7 +73,7 @@ router.get('/read/:id', async (req, res) => {
 });
 
 // User Register:
-router.post('/register', upload.single('file'), async(req, res) => {
+router.post('/register', auth.authenticateToken, upload.single('file'), async(req, res) => {
     
     const { username, email, password} = req.body;
 
@@ -110,7 +110,7 @@ router.post('/register', upload.single('file'), async(req, res) => {
 });
 
 // Update User:
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', auth.authenticateToken, async (req, res) => {
 
     const data = {};
 
@@ -137,7 +137,7 @@ router.put('/update/:id', async (req, res) => {
 });
 
 // Delete User:
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', auth.authenticateToken, async (req, res) => {
     const delUser = await user.deleteUser(req.params.id);
     return res.send(delUser);
 });
