@@ -5,6 +5,8 @@ import Navbar from './components/navbar';
 import {BrowserRouter,Routes,Route} from 'react-router-dom';
 import Read from './components/read';
 import Update from './components/update';
+import Login from './components/login';
+import Logout from './components/logout';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
       <Route exact path="/create" element={<Create/>}></Route>;
       <Route path="/" element={<Read/>}></Route>;
       <Route path="/update/:id" element={<Update/>}></Route>;
+      <Route path="/login" element={<Login/>}></Route>;
+      <Route path="/logout" element={<Logout/>}></Route>;
     </Routes>
     </BrowserRouter>
     </>

@@ -6,10 +6,10 @@ const config = require('./config/config.json');
 const secretKey = config.secretKey;
 
 const connection = mysql.createConnection({
-    host: config.host,
-    user: config.user,
-    password: config.password,
-    database: config.database
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'userdb'
 });
 
 // Mysql Connection:
@@ -38,7 +38,6 @@ console.log('Connected to MySQL');
 function upload(user, info) {
 
     return new Promise((resolve, reject) => {
-      console.log('AAAAAAAAAAA', user);
 
         connection.query(`SELECT * FROM users WHERE id=${info.id}`, (err, results) => {
             if (err) {
@@ -75,13 +74,12 @@ function register(user) {
         // Generate a salt and hash the password
         bcrypt.genSalt(10, (err, salt) => {
           bcrypt.hash(user.password, salt, (err, hash) => {
-            // Store the user in the database
-            connection.query('INSERT INTO users (username, email, password,image,pdf) VALUES (?, ?, ?, ?, ?)', [user.username, user.email, hash, user.image, user.pdf], (err) => {
+            // Insert the user in the database
+            connection.query('INSERT INTO users (username, email, password,image,pdf) VALUES (?, ?, ?, ?, ?)', [user.username, user.email, hash, user.image, user.pdf], async(err, result) => {
               if (err) {
                 console.error('Error inserting user into database:', err);
                 return reject(500);
               }
-    
               resolve({ message: 'User registered successfully' });
             });
           });
@@ -102,24 +100,21 @@ function login(userData) {
         console.error('Error querying database:', err);
         reject(500);
       }
-
       const user = results[0];
       
       // Check if the user exists
       if (results.length == 0) {
-      //   return res.status(401).json({ message: 'Invalid email or password' });
         reject({ message: 'Invalid email' });
       }
       else {
-
+        
         bcrypt.compare(userData.password, user.password, (err, result) => {
             if (result) {
                 // Generate a JWT token
                 const token = jwt.sign({email:userData.email, id:user.id}, secretKey);
-
+                console.log('RRTTTT', token);
                 resolve({ message: 'Login successful' ,token:token});
               } else {
-              // return res.status(401).json({ message: 'Invalid email or password' });
                 reject({ message: 'Invalid password' });
               }
             });
@@ -135,7 +130,7 @@ function read() {
 
     return new Promise((resolve, reject) => {
 
-        connection.query('SELECT * FROM users', (err, results) => {
+        connection.query('SELECT * FROM users ORDER BY id DESC', (err, results) => {
             if (err) {
               console.error('Error inserting user into database:', err);
               reject(500);
@@ -167,7 +162,6 @@ function readOne(id) {
 function update(data, id) {
 
     return new Promise((resolve, reject) => {
-        
         connection.query(`SELECT * FROM users WHERE id=${id}`, (err, results) => {
             if (err) {
               console.error('Error inserting user into database:', err);
@@ -185,7 +179,7 @@ function update(data, id) {
                       password:hash,
                       username:data.username
                     }
-                    connection.query(`UPDATE users SET password = ? WHERE id = ?`,[info.password, id], (err) => {
+                    connection.query(`UPDATE users SET password = ?, username = ? WHERE id = ?`,[info.password, info.username, id], (err) => {
                       if (err) {
                         console.error('Error updating user into database:', err);
                         reject(500);

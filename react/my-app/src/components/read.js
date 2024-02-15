@@ -5,11 +5,10 @@ import { Link, useNavigate } from 'react-router-dom';
 function Read() {
   const [userData, setUserData] = useState([]);
   const navigate = useNavigate();
-
+  const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 
   const fetchData = async() => {
     const baseURL = "http://localhost:7000/users/read";
-
     axios.get(baseURL)
       .then(response => {
         setUserData(response.data);
@@ -20,13 +19,13 @@ function Read() {
 }
 
   const deletefun = (id)=>{
-    axios.delete('http://localhost:7000/users/delete/'+id).then((res)=>{
+    axios.delete('http://localhost:7000/users/delete/'+id, token).then((res)=>{
       alert(res.data.message);
       fetchData();
       navigate('/');
     }).catch(err =>console.log(err));
   };
-console.log(userData);
+
   useEffect(()=> {
     fetchData();
   },[]);
@@ -34,8 +33,8 @@ console.log(userData);
   return (
     <div>
       <h2 style={{'text-align': '-webkit-center'}}>Users Data</h2>
-      <table class="table">
-  <thead class="thead-dark">
+      <table clasName="table">
+  <thead clasName="thead-dark">
     <tr>
         <th>ID</th>
         <th>Email</th>
@@ -51,45 +50,14 @@ console.log(userData);
               <td>{user.id}</td>
               <td>{user.email}</td>
               <td>{user.username}</td>
-              <td><img src={user.image?user.image:user.pdf} className="image" alt="logo" /></td>
-              <td><Link to={`/update/${user.id}`}><button type='button' class="btn btn-primary">Edit</button></Link></td>
-              <td><button onClick={()=> deletefun(user.id)} type="button" class="btn btn-danger">Delete</button></td>
+              <td><img src={user.image?user.image:user.pdf} clasNameName="image" alt="logo" /></td>
+              <td><Link to={`/update/${user.id}`}><button type='button' clasName="btn btn-primary">Edit</button></Link></td>
+              <td><button onClick={()=> deletefun(user.id)} type="button" clasName="btn btn-danger">Delete</button></td>
             </tr>
           ))}
   </tbody>
 </table>
-
-{/* <table class="table">
-  <thead class="thead-light">
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>Larry</td>
-      <td>the Bird</td>
-      <td>@twitter</td>
-    </tr>
-  </tbody>
-</table> */}
-    </div>
+</div>
   );
 }
 

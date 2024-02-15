@@ -13,9 +13,7 @@ function Update() {
         password:'',
         image:''
     });
-
-    // const [name, setname] = useState('');
-    // const [email, setEmail] = useState('');
+    const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 
     useEffect(()=>{
         axios.get('http://localhost:7000/users/read/'+id).then(res=>{
@@ -28,7 +26,7 @@ function Update() {
     const submitform = (e)=>{
         e.preventDefault();
 
-        axios.put("http://localhost:7000/users/update/"+id, value).then(res=>{
+        axios.put("http://localhost:7000/users/update/"+id, value, token).then(res=>{
             alert(res.data.message);
             navigate('/');
         }).catch(err =>console.log(err));

@@ -39,18 +39,20 @@ app.use(upload.single('file'));
 
 // User Login:
 router.post('/login', async(req, res) => {
+
     const { email, password } = req.body;
+    
     const data = {
         email:email,
         password:password
-    }
+    };
     try{
         const user_data = await user.login(data);
 
         if(user_data.token) {
             res.setHeader('Authorization', `Bearer ${user_data.token}`);
             return res.status(200).json({ message: 'Login successful', token: user_data.token });
-        }
+        };
       }
       catch(err) {
         return res.send(err.message);
@@ -58,7 +60,7 @@ router.post('/login', async(req, res) => {
 });
 
 // Read All Users:
-router.get('/read', auth.authenticateToken, async(req,res)=> {
+router.get('/read', async(req,res)=> {
     
     const data = await user.read(); 
     res.send(data);
@@ -66,14 +68,13 @@ router.get('/read', auth.authenticateToken, async(req,res)=> {
 
 // Read Single User:
 router.get('/read/:id', auth.authenticateToken, async (req, res) => {
-    const id = req.params.id;
-    const data = await user.readOne(id);
+    const data = await user.readOne(req.user.id);
 
     return res.send(data);
 });
 
 // User Register:
-router.post('/register', auth.authenticateToken, upload.single('file'), async(req, res) => {
+router.post('/register', upload.single('file'), async(req, res) => {
     
     const { username, email, password} = req.body;
 
@@ -101,8 +102,10 @@ router.post('/register', auth.authenticateToken, upload.single('file'), async(re
     };
 
     try {
-        const user_data = await user.register(data);
-        return res.send(user_data);
+        await user.register(data).then((data)=>{
+            return res.send(user_data);
+        });
+
     }
     catch(err) {
         return res.send(err.message);
@@ -128,7 +131,7 @@ router.put('/update/:id', auth.authenticateToken, async (req, res) => {
         data.password = req.body.password || null;
     }
     try {
-    const user_data = await user.update(data, req.params.id);
+    const user_data = await user.update(data, req.user.id);
     return res.send(user_data);
     }
     catch(err) {

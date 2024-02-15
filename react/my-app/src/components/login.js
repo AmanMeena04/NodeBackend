@@ -1,48 +1,43 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState,useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const baseURL = 'http://localhost:7000/users/register';
+const baseURL = 'http://localhost:7000/users/login';
 
-function Create() {
+function Login() {
 
-let [username, setUsername] = useState();
-let [email, setEmail] = useState();
-let [password, setPassword] = useState();
-let [files, setFiles] = useState(null);
 const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
+let [value, setValue] = useState({
+    email:'',
+    password:''
+});
 
     const navigate = useNavigate();
-
-    const handleImageChange = (event) => {
-        const file = event.target.files[0];
-        setFiles(file);
-    };
     
    const Createfun=(e)=> {
 
     e.preventDefault();
 
-    const formdata = new FormData();
-
-    formdata.append("username", username);
-    formdata.append("email", email);
-    formdata.append('password', password);
-    formdata.append('file', files);
-
-    axios.post(baseURL, formdata, {
-        headers: { "Content-Type": "multipart/form-data" }
+    axios.post(baseURL, value, {
     }).then((res)=>{
-        if(res) {
+        if(res.data.token) {
+            setToken(localStorage.setItem('token', JSON.stringify(res.data.token)));
             alert(res.data.message);
+            navigate('/');
         }
         else {
             alert(res.data);
         };
-        navigate('/');
     }).catch(err =>console.log(err));
    };
+
+   useEffect(() => {
+    if(token !== ""){
+        alert("You already logged in");
+      navigate("/");
+    }
+  }, []);
 
     return(
         <>
@@ -55,29 +50,19 @@ const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) |
 
                     <div className="mb-md-5 mt-md-4 pb-5">
 
-                    <h2 className="fw-bold mb-2 text-uppercase">Create</h2>
+                    <h2 className="fw-bold mb-2 text-uppercase">Login</h2>
 
                     <div className="form-outline form-white mb-4">
-                        <input type="text" id="typeEmailX" className="form-control form-control-lg" value={username} onChange={(e)=>setUsername(e.target.value)}/>
-                        <label className="form-label" htmlFor="typeEmailX">Username</label>
-                    </div>
-
-                    <div className="form-outline form-white mb-4">
-                        <input type="email" id="typeEmailX" className="form-control form-control-lg" value={email} onChange={(e)=>setEmail(e.target.value)}/>
+                        <input type="email" id="typeEmailX" className="form-control form-control-lg" value={value.email} onChange={(e)=>setValue({...value, email:e.target.value})}/>
                         <label className="form-label" htmlFor="typeEmailX">Email</label>
                     </div>
 
                     <div className="form-outline form-white mb-4">
-                        <input type="password" id="typePasswordX" className="form-control form-control-lg" value={password} onChange={(e)=>setPassword(e.target.value)}/>
+                        <input type="password" id="typePasswordX" className="form-control form-control-lg" value={value.password} onChange={(e)=>setValue({...value, password:e.target.value})}/>
                         <label className="form-label" htmlFor="typePasswordX">Password</label>
                     </div>
-
-                    <div className="form-outline form-white mb-4">
-                        <input type="file" id="typeFileX" className="form-control form-control-lg" onChange={handleImageChange}/>
-                        <label className="form-label" htmlFor="typeFileX">Image</label>
-                    </div>
-
-                    <button className="btn btn-outline-light btn-lg px-5" type="submit">Create</button>
+                    
+                    <button className="btn btn-outline-light btn-lg px-5" type="submit">Login</button>
 
                     <div className="d-flex justify-content-center text-center mt-4 pt-1">
                         <a href="#!" className="text-white"><i className="fab fa-facebook-f fa-lg"></i></a>
@@ -97,4 +82,4 @@ const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) |
     );
 }
 
-export default Create;
+export default Login;
