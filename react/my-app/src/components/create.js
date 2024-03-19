@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ let [username, setUsername] = useState();
 let [email, setEmail] = useState();
 let [password, setPassword] = useState();
 let [files, setFiles] = useState(null);
+// const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 
     const navigate = useNavigate();
 
@@ -33,10 +34,8 @@ let [files, setFiles] = useState(null);
     axios.post(baseURL, formdata, {
         headers: { "Content-Type": "multipart/form-data" }
     }).then((res)=>{
-        // username='';
-        // email='';
-        // password='';
-        if(res.data.message) {
+        console.log('ccccccc', res);
+        if(res) {
             alert(res.data.message);
         }
         else {
@@ -58,7 +57,6 @@ let [files, setFiles] = useState(null);
                     <div className="mb-md-5 mt-md-4 pb-5">
 
                     <h2 className="fw-bold mb-2 text-uppercase">Create</h2>
-                    {/* <p className="text-white-50 mb-5">Please enter your login and password!</p> */}
 
                     <div className="form-outline form-white mb-4">
                         <input type="text" id="typeEmailX" className="form-control form-control-lg" value={username} onChange={(e)=>setUsername(e.target.value)}/>
@@ -97,7 +95,7 @@ let [files, setFiles] = useState(null);
         </form>
         </section>
         </>
-    )
+    );
 }
 
 export default Create;

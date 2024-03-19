@@ -1,7 +1,11 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
+import { useState } from 'react';
 
 function Navbar() {
+
+    const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
+
     return(
     <>
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
@@ -17,6 +21,9 @@ function Navbar() {
                 </li>
                 <li className="nav-item">
                 <Link className="nav-link active" aria-current="page" to='/create'>Create</Link>
+                </li>
+                <li className="nav-item">
+                <Link className="nav-link active" aria-current="page" to='/logout'>Logout</Link>
                 </li>
             </ul>
             </div>

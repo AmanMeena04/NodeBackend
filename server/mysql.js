@@ -1,15 +1,14 @@
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const config = require('./config/config.json');
 
-const secretKey = config.secretKey;
+const secretKey = process.env.SECRET_KEY;
 
 const connection = mysql.createConnection({
-    host: config.host,
-    user: config.user,
-    password: config.password,
-    database: config.database
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: process.env.DB
 });
 
 // Mysql Connection:
@@ -19,7 +18,7 @@ if (err) {
     return;
 }
 
-connection.query('CREATE DATABASE IF NOT EXISTS userdb', function (err, result) {
+connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB}`, function (err, result) {
   if (err) throw err;
 
   console.log("Database created");
@@ -38,7 +37,6 @@ console.log('Connected to MySQL');
 function upload(user, info) {
 
     return new Promise((resolve, reject) => {
-      console.log('AAAAAAAAAAA', user);
 
         connection.query(`SELECT * FROM users WHERE id=${info.id}`, (err, results) => {
             if (err) {
@@ -59,7 +57,6 @@ function upload(user, info) {
 // User Register Function:
 
 function register(user) {
-
     return new Promise((resolve, reject) => {
         // Check if the username is already taken
     connection.query('SELECT * FROM users WHERE email = ?', [user.email], (err, results) => {
@@ -75,14 +72,14 @@ function register(user) {
         // Generate a salt and hash the password
         bcrypt.genSalt(10, (err, salt) => {
           bcrypt.hash(user.password, salt, (err, hash) => {
-            // Store the user in the database
-            connection.query('INSERT INTO users (username, email, password,image,pdf) VALUES (?, ?, ?, ?, ?)', [user.username, user.email, hash, user.image, user.pdf], (err) => {
+            // Insert the user in the database
+            connection.query('INSERT INTO users (username, email, password,image,pdf) VALUES (?, ?, ?, ?, ?)', [user.username, user.email, hash, user.image, user.pdf], async(err, result) => {
               if (err) {
                 console.error('Error inserting user into database:', err);
                 return reject(500);
               }
-    
-              resolve({ message: 'User registered successfully' });
+              let userData = await readOne(result.insertId);
+              return resolve({ message: 'User registered successfully', userData:userData[0]});
             });
           });
         });
@@ -102,24 +99,20 @@ function login(userData) {
         console.error('Error querying database:', err);
         reject(500);
       }
-
       const user = results[0];
       
       // Check if the user exists
       if (results.length == 0) {
-      //   return res.status(401).json({ message: 'Invalid email or password' });
         reject({ message: 'Invalid email' });
       }
       else {
-
+        
         bcrypt.compare(userData.password, user.password, (err, result) => {
             if (result) {
                 // Generate a JWT token
-                const token = jwt.sign({email:userData.email, id:user.id}, secretKey);
-
-                resolve({ message: 'Login successful' ,token:token});
+                const token = jwt.sign({email:userData.email, id:user.id}, secretKey, {expiresIn:'30sec'});
+                resolve({ message: 'Login successful' ,token:token, id:user.id});
               } else {
-              // return res.status(401).json({ message: 'Invalid email or password' });
                 reject({ message: 'Invalid password' });
               }
             });
@@ -135,7 +128,7 @@ function read() {
 
     return new Promise((resolve, reject) => {
 
-        connection.query('SELECT * FROM users', (err, results) => {
+        connection.query('SELECT * FROM users ORDER BY id DESC', (err, results) => {
             if (err) {
               console.error('Error inserting user into database:', err);
               reject(500);
@@ -151,7 +144,6 @@ function read() {
 function readOne(id) {
 
     return new Promise((resolve, reject) => {
-
         connection.query(`SELECT * FROM users WHERE id=${id}`, (err, results) => {
             if (err) {
               console.error('Error Getting user Data:', err);
@@ -162,12 +154,72 @@ function readOne(id) {
     });
 }
 
+function createOtp(userId, otp) {
+
+return new Promise((resolve, reject)=> {
+  connection.query('INSERT INTO otp (user_id, otp) VALUES (?, ?)', [userId, otp], async(error, res)=>{
+    
+    if(error) {
+      reject(error);
+    };
+
+    // if(res.insertId) {
+    //   connection.query('INSERT INTO otp_verify (otp_id) VALUES (?) ', [res.insertId], (error, result)=>{
+    //     if(error) {
+    //       console.log(error);
+    //     }
+    //   });
+    // }
+    let data = await readOtp(res.insertId);
+    resolve(data);
+  });
+});
+};
+// Read user OTP:
+
+function readOtp(id) {
+
+  return new Promise((resolve, reject) => {
+    connection.query('SELECT * FROM otp WHERE id = ?', [id], (error, result)=> {
+
+        if(error) {
+          reject(error);
+        }
+        else {
+          resolve(result);
+        };
+    });
+  });
+};
+
+function Verified(id) {
+
+  return new Promise((resolve, reject) => {
+    connection.query('SELECT * FROM otp WHERE id = ?', [id], (error, result)=> {
+
+        if(error) {
+          reject(error);
+        }
+
+        if(result[0].id) {
+          connection.query('update otp SET is_verified = ? WHERE id = ?',[1, id], (error, result) =>{
+            if(error) {
+              reject(error);
+            }
+            else {
+              resolve(result);
+            }
+          });
+        }
+    });
+  });
+};
+
 // User Update Function:
 
 function update(data, id) {
 
     return new Promise((resolve, reject) => {
-        
         connection.query(`SELECT * FROM users WHERE id=${id}`, (err, results) => {
             if (err) {
               console.error('Error inserting user into database:', err);
@@ -185,7 +237,7 @@ function update(data, id) {
                       password:hash,
                       username:data.username
                     }
-                    connection.query(`UPDATE users SET password = ? WHERE id = ?`,[info.password, id], (err) => {
+                    connection.query(`UPDATE users SET password = ?, username = ? WHERE id = ?`,[info.password, info.username, id], (err) => {
                       if (err) {
                         console.error('Error updating user into database:', err);
                         reject(500);
@@ -256,4 +308,5 @@ function genrateExel(id) {
   })
 }
 
-module.exports = {register, login, read, readOne, update, deleteUser, upload, genratePDF, genrateExel};
+module.exports = {register, login, read, readOne, update, deleteUser,upload,
+                  genratePDF, genrateExel,readOtp, Verified, createOtp};

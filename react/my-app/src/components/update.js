@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { React,useEffect, useState } from 'react';
 import axios from 'axios';
-
+import '../App.css';
+axios.defaults.withCredentials = true
 // const baseURL = "http://localhost:7000/users/read";
 
 function Update() {
@@ -13,12 +14,10 @@ function Update() {
         password:'',
         image:''
     });
-
-    // const [name, setname] = useState('');
-    // const [email, setEmail] = useState('');
+    // const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 
     useEffect(()=>{
-        axios.get('http://localhost:7000/users/read/'+id).then(res=>{
+        axios.get('http://localhost:7000/users/read/'+id,{withCredentials:true}).then(res=>{
             setValue({...value, username: res.data[0].username, email: res.data[0].email, password:res.data[0].password, image:res.data[0].image});
         });
     },[id]);
@@ -28,7 +27,7 @@ function Update() {
     const submitform = (e)=>{
         e.preventDefault();
 
-        axios.put("http://localhost:7000/users/update/"+id, value).then(res=>{
+        axios.put("http://localhost:7000/users/update/"+id, value,{withCredentials:true}).then(res=>{
             alert(res.data.message);
             navigate('/');
         }).catch(err =>console.log(err));
@@ -46,7 +45,6 @@ function Update() {
                     <div className="mb-md-5 mt-md-4 pb-5">
 
                     <h2 className="fw-bold mb-2 text-uppercase">Update</h2>
-                    {/* <p className="text-white-50 mb-5">Please enter your login and password!</p> */}
 
                     <div className="form-outline form-white mb-4">
                         <input type="text" id="typeEmailX" value={value.username} onChange={e => setValue({...value, username:e.target.value})} className="form-control form-control-lg"/>
@@ -58,18 +56,11 @@ function Update() {
                         <label className="form-label" htmlFor="typeEmailX">Email</label>
                     </div>
 
-                    {/* <div className="form-outline form-white mb-4">
-                        <input type="email" id="typeEmailX" value={value.password} onChange={e => setValue({...value, password:e.target.value})} className="form-control form-control-lg"/>
-                        <label className="form-label" htmlFor="typeEmailX">Password</label>
-                    </div> */}
-
                     <div className="form-outline form-white mb-4">
-                    <div>
-                        <img type ="file" src={value.image} alt="Updated Image" />
-                        <button>Update Image</button>
+                    <div className="update-image">
+                        <img type ="file" src={`http://localhost:7000/${value.image}`} alt="Updated Image" />
+                        <label className="form-label" htmlFor="typeFileX">Update Image</label>
                     </div> 
-                        {/* <input type="image" id="typeEmailX" value={value.image} onChange={e => setValue({...value, image:e.target.value})} className="form-control form-control-lg"/> */}
-                        {/* <label className="form-label" htmlFor="typeEmailX">Image</label> */}
                     </div>
 
                     <button className="btn btn-outline-light btn-lg px-5" type="submit">Update</button>
@@ -83,8 +74,6 @@ function Update() {
                     </div>
 
                     <div>
-                    {/* <p className="mb-0">if you have an account? <a href="#!" className="text-white-50 fw-bold">Login</a>
-                    </p> */}
                     </div>
 
                 </div>
