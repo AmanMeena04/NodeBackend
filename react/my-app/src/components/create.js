@@ -11,7 +11,7 @@ let [username, setUsername] = useState();
 let [email, setEmail] = useState();
 let [password, setPassword] = useState();
 let [files, setFiles] = useState(null);
-const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
+// const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 
     const navigate = useNavigate();
 
@@ -34,6 +34,7 @@ const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) |
     axios.post(baseURL, formdata, {
         headers: { "Content-Type": "multipart/form-data" }
     }).then((res)=>{
+        console.log('ccccccc', res);
         if(res) {
             alert(res.data.message);
         }

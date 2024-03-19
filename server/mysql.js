@@ -1,15 +1,14 @@
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const config = require('./config/config.json');
 
-const secretKey = config.secretKey;
+const secretKey = process.env.SECRET_KEY;
 
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'userdb'
+    database: process.env.DB
 });
 
 // Mysql Connection:
@@ -19,7 +18,7 @@ if (err) {
     return;
 }
 
-connection.query('CREATE DATABASE IF NOT EXISTS userdb', function (err, result) {
+connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB}`, function (err, result) {
   if (err) throw err;
 
   console.log("Database created");
@@ -58,7 +57,6 @@ function upload(user, info) {
 // User Register Function:
 
 function register(user) {
-
     return new Promise((resolve, reject) => {
         // Check if the username is already taken
     connection.query('SELECT * FROM users WHERE email = ?', [user.email], (err, results) => {
@@ -80,7 +78,8 @@ function register(user) {
                 console.error('Error inserting user into database:', err);
                 return reject(500);
               }
-              resolve({ message: 'User registered successfully' });
+              let userData = await readOne(result.insertId);
+              return resolve({ message: 'User registered successfully', userData:userData[0]});
             });
           });
         });
@@ -111,9 +110,8 @@ function login(userData) {
         bcrypt.compare(userData.password, user.password, (err, result) => {
             if (result) {
                 // Generate a JWT token
-                const token = jwt.sign({email:userData.email, id:user.id}, secretKey);
-                console.log('RRTTTT', token);
-                resolve({ message: 'Login successful' ,token:token});
+                const token = jwt.sign({email:userData.email, id:user.id}, secretKey, {expiresIn:'30sec'});
+                resolve({ message: 'Login successful' ,token:token, id:user.id});
               } else {
                 reject({ message: 'Invalid password' });
               }
@@ -146,7 +144,6 @@ function read() {
 function readOne(id) {
 
     return new Promise((resolve, reject) => {
-
         connection.query(`SELECT * FROM users WHERE id=${id}`, (err, results) => {
             if (err) {
               console.error('Error Getting user Data:', err);
@@ -156,6 +153,67 @@ function readOne(id) {
           });
     });
 }
+
+function createOtp(userId, otp) {
+
+return new Promise((resolve, reject)=> {
+  connection.query('INSERT INTO otp (user_id, otp) VALUES (?, ?)', [userId, otp], async(error, res)=>{
+    
+    if(error) {
+      reject(error);
+    };
+
+    // if(res.insertId) {
+    //   connection.query('INSERT INTO otp_verify (otp_id) VALUES (?) ', [res.insertId], (error, result)=>{
+    //     if(error) {
+    //       console.log(error);
+    //     }
+    //   });
+    // }
+    let data = await readOtp(res.insertId);
+    resolve(data);
+  });
+});
+};
+// Read user OTP:
+
+function readOtp(id) {
+
+  return new Promise((resolve, reject) => {
+    connection.query('SELECT * FROM otp WHERE id = ?', [id], (error, result)=> {
+
+        if(error) {
+          reject(error);
+        }
+        else {
+          resolve(result);
+        };
+    });
+  });
+};
+
+function Verified(id) {
+
+  return new Promise((resolve, reject) => {
+    connection.query('SELECT * FROM otp WHERE id = ?', [id], (error, result)=> {
+
+        if(error) {
+          reject(error);
+        }
+
+        if(result[0].id) {
+          connection.query('update otp SET is_verified = ? WHERE id = ?',[1, id], (error, result) =>{
+            if(error) {
+              reject(error);
+            }
+            else {
+              resolve(result);
+            }
+          });
+        }
+    });
+  });
+};
 
 // User Update Function:
 
@@ -250,4 +308,5 @@ function genrateExel(id) {
   })
 }
 
-module.exports = {register, login, read, readOne, update, deleteUser, upload, genratePDF, genrateExel};
+module.exports = {register, login, read, readOne, update, deleteUser,upload,
+                  genratePDF, genrateExel,readOtp, Verified, createOtp};

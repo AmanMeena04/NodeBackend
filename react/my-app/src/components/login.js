@@ -7,7 +7,7 @@ const baseURL = 'http://localhost:7000/users/login';
 
 function Login() {
 
-const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
+// const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 let [value, setValue] = useState({
     email:'',
     password:''
@@ -21,9 +21,10 @@ let [value, setValue] = useState({
 
     axios.post(baseURL, value, {
     }).then((res)=>{
-        if(res.data.token) {
-            setToken(localStorage.setItem('token', JSON.stringify(res.data.token)));
-            alert(res.data.message);
+        
+        if(res) {
+            // setToken(localStorage.setItem('token', JSON.stringify(res.data.token)));
+            console.log(res);
             navigate('/');
         }
         else {
@@ -32,12 +33,12 @@ let [value, setValue] = useState({
     }).catch(err =>console.log(err));
    };
 
-   useEffect(() => {
-    if(token !== ""){
-        alert("You already logged in");
-      navigate("/");
-    }
-  }, []);
+//    useEffect(() => {
+//     if(token !== ""){
+//         alert("You already logged in");
+//       navigate("/");
+//     }
+//   }, []);
 
     return(
         <>

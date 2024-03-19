@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+.ReadClass img {
+width: 25px;
+}
+
+.update-image img {
+  width: 30px;
+  height: 51px;
+}

@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-
+import '../App.css';
+axios.defaults.withCredentials = true;
 function Read() {
   const [userData, setUserData] = useState([]);
   const navigate = useNavigate();
-  const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
+  // const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("token")) || "");
 
   const fetchData = async() => {
     const baseURL = "http://localhost:7000/users/read";
-    axios.get(baseURL)
+    axios.get(baseURL, {withCredentials:true})
       .then(response => {
         setUserData(response.data);
       })
@@ -19,7 +20,7 @@ function Read() {
 }
 
   const deletefun = (id)=>{
-    axios.delete('http://localhost:7000/users/delete/'+id, token).then((res)=>{
+    axios.delete('http://localhost:7000/users/delete/'+id).then((res)=>{
       alert(res.data.message);
       fetchData();
       navigate('/');
@@ -31,7 +32,7 @@ function Read() {
   },[]);
 
   return (
-    <div>
+    <div className='ReadClass'>
       <h2 style={{'text-align': '-webkit-center'}}>Users Data</h2>
       <table clasName="table">
   <thead clasName="thead-dark">
@@ -50,7 +51,7 @@ function Read() {
               <td>{user.id}</td>
               <td>{user.email}</td>
               <td>{user.username}</td>
-              <td><img src={user.image?user.image:user.pdf} clasNameName="image" alt="logo" /></td>
+              <td><img src={`http://localhost:7000/${user.image}`} clasNameName="image" style={{"width": "25px;"}} alt="logo" /></td>
               <td><Link to={`/update/${user.id}`}><button type='button' clasName="btn btn-primary">Edit</button></Link></td>
               <td><button onClick={()=> deletefun(user.id)} type="button" clasName="btn btn-danger">Delete</button></td>
             </tr>
