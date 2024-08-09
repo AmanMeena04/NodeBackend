@@ -13,7 +13,7 @@ app.use('/uploads', express.static('uploads'));
 
 require('dotenv').config();
 
-const port = process.env.SERVER_PORT || 4000;
+const port = process.env.SERVER_PORT || 7000;
 
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json());

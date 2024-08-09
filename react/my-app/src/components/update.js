@@ -27,7 +27,7 @@ function Update() {
     const submitform = (e)=>{
         e.preventDefault();
 
-        axios.put("http://localhost:7000/users/update/"+id, value,{withCredentials:true}).then(res=>{
+        axios.put("http://localhost:7000/users/update/"+id, value, {withCredentials:true}).then(res=>{
             alert(res.data.message);
             navigate('/');
         }).catch(err =>console.log(err));

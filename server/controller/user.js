@@ -66,13 +66,13 @@ router.post('/login', async(req, res) => {
 });
 
 // Read All Users:
-router.get('/read', auth.authenticateToken, async(req, res)=> {
+router.get('/read', async(req, res)=> {
     const data = await user.read();
     res.send(data);
 });
 
 // Read Single User:
-router.get('/read/:id', auth.authenticateToken, async (req, res) => {
+router.get('/read/:id', async (req, res) => {
     const data = await user.readOne(req.params.id);
     return res.send(data);
 });
@@ -96,7 +96,7 @@ router.post('/register', upload.single('file'), async(req, res) => {
         email:email,
         password:password
     }
-
+    
     if(req.file.mimetype=='application/pdf'){
         data.pdf= 'uploads' + "/" + req.file.filename.replace(/\\/g, path.sep);
     }
@@ -118,7 +118,7 @@ router.post('/register', upload.single('file'), async(req, res) => {
 });
 
 // Update User:
-router.put('/update/:id', auth.authenticateToken, async (req, res) => {
+router.put('/update/:id', async (req, res) => {
     const data = {};
 
     if(!req.body.email){
@@ -135,7 +135,6 @@ router.put('/update/:id', auth.authenticateToken, async (req, res) => {
         data.password = req.body.password || null;
     }
     try {
-    // const user_data = await user.update(data, req.user.id);
     const user_data = await user.update(data, req.params.id);
     return res.send(user_data);
     }
@@ -145,13 +144,13 @@ router.put('/update/:id', auth.authenticateToken, async (req, res) => {
 });
 
 // Delete User:
-router.delete('/delete/:id', auth.authenticateToken, async (req, res) => {
+router.delete('/delete/:id', async (req, res) => {
     const delUser = await user.deleteUser(req.params.id);
     return res.send(delUser);
 });
 ;
 // Logout User:
-router.get('/logout', auth.authenticateToken, (req, res) => {
+router.get('/logout', (req, res) => {
 
     const authHeader = req.headers["authorization"];
 
@@ -168,7 +167,7 @@ router.get('/logout', auth.authenticateToken, (req, res) => {
 });
 
 // User OTP Generate:
-router.post('/generate-otp', auth.authenticateToken, async(req, res)=> {
+router.post('/generate-otp', async(req, res)=> {
 
     let userId = req.user.id;
 
@@ -204,7 +203,7 @@ router.post('/generate-otp', auth.authenticateToken, async(req, res)=> {
 });
 
 // User OTP Verification:
-router.get('/verify-otp', auth.authenticateToken, async(req, res)=> {
+router.get('/verify-otp', async(req, res)=> {
 
     let {userId, otp, otpId} = req.body;
 
@@ -239,7 +238,7 @@ router.get('/verify-otp', auth.authenticateToken, async(req, res)=> {
 });
 
 // User OTP Read:
-router.get('/readOtp', auth.authenticateToken, (req, res)=> {
+router.get('/readOtp', (req, res)=> {
     let {otpId} = req.body;
     let value = user.readOtp(otpId);
     console.log(value);
@@ -253,7 +252,7 @@ async function sendOtp(otp, email) {
 };
 
 // Genrate PDF With All User Data:
-router.get('/generatepdf', auth.authenticateToken, async(req, res)=> {
+router.get('/generatepdf', async(req, res)=> {
 
     const genPDF = await user.genratePDF();
     pdf.genratePDF(genPDF);
@@ -262,7 +261,7 @@ router.get('/generatepdf', auth.authenticateToken, async(req, res)=> {
 });
 
 // Generate Excel of Single User:
-router.get('/genexcel/:id', auth.authenticateToken, async(req, res)=> {
+router.get('/genexcel/:id', async(req, res)=> {
 
     const id = req.params.id;
     const genExel = await user.genrateExel(id);

@@ -2,13 +2,13 @@ const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const secretKey = process.env.SECRET_KEY;
+const secretKey = process.env.SECRET_KEY || 'jwtsecretkey';
 
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: process.env.DB
+    database: process.env.DB || 'userdb'
 });
 
 // Mysql Connection:
@@ -220,7 +220,7 @@ function Verified(id) {
 function update(data, id) {
 
     return new Promise((resolve, reject) => {
-        connection.query(`SELECT * FROM users WHERE id=${id}`, (err, results) => {
+        connection.query('SELECT * FROM users WHERE id=?',[id], (err, results) => {
             if (err) {
               console.error('Error inserting user into database:', err);
               reject(500);
@@ -237,13 +237,13 @@ function update(data, id) {
                       password:hash,
                       username:data.username
                     }
-                    connection.query(`UPDATE users SET password = ?, username = ? WHERE id = ?`,[info.password, info.username, id], (err) => {
+                    connection.query('UPDATE users SET password = ?, username = ? WHERE id = ?',[info.password, info.username, id], (err) => {
                       if (err) {
                         console.error('Error updating user into database:', err);
                         reject(500);
-                      }
+                      };
             
-                      resolve({ message: 'User password update successfully' });
+                      resolve({ message: 'User update successfully' });
                     });
                   });
               });
@@ -254,7 +254,8 @@ function update(data, id) {
                 username:data.username,
                 email:data.email
               }
-              connection.query(`UPDATE users SET email = ?,username = ? WHERE id = ?`,[info.email, info.username, id], (err) => {
+              console.log('SSSSS', info);
+              connection.query('UPDATE users SET email = ?, username = ? WHERE id = ?',[info.email, info.username, id], (err) => {
                 if (err) {
                   console.error('Error updating user into database:', err);
                   reject(500);
