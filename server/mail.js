@@ -12,7 +12,7 @@ let transporter = nodemailer.createTransport({
     secureConnection:true,
     auth: {
         user: process.env.USER ||'meena.aman4747@gmail.com',
-        pass: process.env.PASS || 'lqwimlklhvtvpfte'
+        pass: process.env.PASS
     },
     tls:{
         rejectUnauthorized:true
